@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>FME START</title>
+        <link rel="stylesheet" href="assets/style.css">
+    </head>
+    <body translate="no">
+        <div class="nav">
+            <div class="menu">
+            </div>
+        </div>
+        <div class="hero">
+            <div class="hero-text">
+                <h1>创想不凡</h1>
+                <p>结伴AI，协助您创造全新可能。
+                    <br >Intelligence to imagine, Technology to create.</p>
+                <div class="buttons">
+                    <a class="button primary"
+                        href="/login"
+                        target="_blank">登录</a>
+                    <a class="button secondary" href="/chat" target="_blank">聊天</a>
+                </div>
+            </div>
+            <div class="blob-cont">
+                <div class="yellow blob"></div>
+                <div class="red blob"></div>
+                <div class="green blob"></div>
+            </div>
+        </div>
+        <svg>
+            <filter id="noiseFilter">
+                <feTurbulence type="fractalNoise" baseFrequency="0.6" stitchTiles="stitch"></feTurbulence>
+                <feColorMatrix in="colorNoise" type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 1 0">
+                </feColorMatrix>
+                <feComposite operator="in" in2="SourceGraphic" result="monoNoise"></feComposite>
+                <feBlend in="SourceGraphic" in2="monoNoise" mode="screen"></feBlend>
+            </filter>
+        </svg>
+        <!-- Not required 
+        <a href="/about" target="_blank" class="aboutus">ABOUT US</a>-->
+    </body>
+</html>
