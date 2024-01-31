@@ -6,12 +6,13 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/songquanpeng/one-api/common"
+	"github.com/songquanpeng/one-api/common/logger"
+	"github.com/songquanpeng/one-api/relay/channel/openai"
+	"github.com/songquanpeng/one-api/relay/constant"
+	"github.com/songquanpeng/one-api/relay/util"
 	"io"
 	"net/http"
-	"one-api/common"
-	"one-api/relay/channel/openai"
-	"one-api/relay/constant"
-	"one-api/relay/util"
 	"strings"
 	"sync"
 	"time"
@@ -19,49 +20,49 @@ import (
 
 // https://cloud.baidu.com/doc/WENXINWORKSHOP/s/flfmc9do2
 
-type BaiduTokenResponse struct {
+type TokenResponse struct {
 	ExpiresIn   int    `json:"expires_in"`
 	AccessToken string `json:"access_token"`
 }
 
-type BaiduMessage struct {
+type Message struct {
 	Role    string `json:"role"`
 	Content string `json:"content"`
 }
 
-type BaiduChatRequest struct {
-	Messages []BaiduMessage `json:"messages"`
-	Stream   bool           `json:"stream"`
-	UserId   string         `json:"user_id,omitempty"`
+type ChatRequest struct {
+	Messages []Message `json:"messages"`
+	Stream   bool      `json:"stream"`
+	UserId   string    `json:"user_id,omitempty"`
 }
 
-type BaiduError struct {
+type Error struct {
 	ErrorCode int    `json:"error_code"`
 	ErrorMsg  string `json:"error_msg"`
 }
 
 var baiduTokenStore sync.Map
 
-func ConvertRequest(request openai.GeneralOpenAIRequest) *BaiduChatRequest {
-	messages := make([]BaiduMessage, 0, len(request.Messages))
+func ConvertRequest(request openai.GeneralOpenAIRequest) *ChatRequest {
+	messages := make([]Message, 0, len(request.Messages))
 	for _, message := range request.Messages {
 		if message.Role == "system" {
-			messages = append(messages, BaiduMessage{
+			messages = append(messages, Message{
 				Role:    "user",
 				Content: message.StringContent(),
 			})
-			messages = append(messages, BaiduMessage{
+			messages = append(messages, Message{
 				Role:    "assistant",
 				Content: "Okay",
 			})
 		} else {
-			messages = append(messages, BaiduMessage{
+			messages = append(messages, Message{
 				Role:    message.Role,
 				Content: message.StringContent(),
 			})
 		}
 	}
-	return &BaiduChatRequest{
+	return &ChatRequest{
 		Messages: messages,
 		Stream:   request.Stream,
 	}
@@ -160,7 +161,7 @@ func StreamHandler(c *gin.Context, resp *http.Response) (*openai.ErrorWithStatus
 			var baiduResponse ChatStreamResponse
 			err := json.Unmarshal([]byte(data), &baiduResponse)
 			if err != nil {
-				common.SysError("error unmarshalling stream response: " + err.Error())
+				logger.SysError("error unmarshalling stream response: " + err.Error())
 				return true
 			}
 			if baiduResponse.Usage.TotalTokens != 0 {
@@ -171,7 +172,7 @@ func StreamHandler(c *gin.Context, resp *http.Response) (*openai.ErrorWithStatus
 			response := streamResponseBaidu2OpenAI(&baiduResponse)
 			jsonResponse, err := json.Marshal(response)
 			if err != nil {
-				common.SysError("error marshalling stream response: " + err.Error())
+				logger.SysError("error marshalling stream response: " + err.Error())
 				return true
 			}
 			c.Render(-1, common.CustomEvent{Data: "data: " + string(jsonResponse)})

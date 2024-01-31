@@ -4,11 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/songquanpeng/one-api/common"
+	"github.com/songquanpeng/one-api/common/config"
+	"github.com/songquanpeng/one-api/common/logger"
+	"github.com/songquanpeng/one-api/model"
+	"github.com/songquanpeng/one-api/relay/channel/openai"
 	"io"
 	"net/http"
-	"one-api/common"
-	"one-api/model"
-	"one-api/relay/channel/openai"
 	"strconv"
 	"strings"
 
@@ -16,7 +18,7 @@ import (
 )
 
 func ShouldDisableChannel(err *openai.Error, statusCode int) bool {
-	if !common.AutomaticDisableChannelEnabled {
+	if !config.AutomaticDisableChannelEnabled {
 		return false
 	}
 	if err == nil {
@@ -32,7 +34,7 @@ func ShouldDisableChannel(err *openai.Error, statusCode int) bool {
 }
 
 func ShouldEnableChannel(err error, openAIErr *openai.Error) bool {
-	if !common.AutomaticEnableChannelEnabled {
+	if !config.AutomaticEnableChannelEnabled {
 		return false
 	}
 	if err != nil {
@@ -138,11 +140,11 @@ func PostConsumeQuota(ctx context.Context, tokenId int, quotaDelta int, totalQuo
 	// quotaDelta is remaining quota to be consumed
 	err := model.PostConsumeTokenQuota(tokenId, quotaDelta)
 	if err != nil {
-		common.SysError("error consuming token remain quota: " + err.Error())
+		logger.SysError("error consuming token remain quota: " + err.Error())
 	}
 	err = model.CacheUpdateUserQuota(userId)
 	if err != nil {
-		common.SysError("error update user quota cache: " + err.Error())
+		logger.SysError("error update user quota cache: " + err.Error())
 	}
 	// totalQuota is total quota consumed
 	if totalQuota != 0 {
@@ -152,11 +154,11 @@ func PostConsumeQuota(ctx context.Context, tokenId int, quotaDelta int, totalQuo
 		model.UpdateChannelUsedQuota(channelId, totalQuota)
 	}
 	if totalQuota <= 0 {
-		common.LogError(ctx, fmt.Sprintf("totalQuota consumed is %d, something is wrong", totalQuota))
+		logger.Error(ctx, fmt.Sprintf("totalQuota consumed is %d, something is wrong", totalQuota))
 	}
 }
 
-func GetAPIVersion(c *gin.Context) string {
+func GetAzureAPIVersion(c *gin.Context) string {
 	query := c.Request.URL.Query()
 	apiVersion := query.Get("api-version")
 	if apiVersion == "" {

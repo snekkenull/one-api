@@ -5,10 +5,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
+	"github.com/songquanpeng/one-api/common"
+	"github.com/songquanpeng/one-api/common/logger"
+	"github.com/songquanpeng/one-api/relay/constant"
 	"io"
 	"net/http"
-	"one-api/common"
-	"one-api/relay/constant"
 	"strings"
 )
 
@@ -46,7 +47,7 @@ func StreamHandler(c *gin.Context, resp *http.Response, relayMode int) (*ErrorWi
 					var streamResponse ChatCompletionsStreamResponse
 					err := json.Unmarshal([]byte(data), &streamResponse)
 					if err != nil {
-						common.SysError("error unmarshalling stream response: " + err.Error())
+						logger.SysError("error unmarshalling stream response: " + err.Error())
 						continue // just ignore the error
 					}
 					for _, choice := range streamResponse.Choices {
@@ -56,7 +57,7 @@ func StreamHandler(c *gin.Context, resp *http.Response, relayMode int) (*ErrorWi
 					var streamResponse CompletionsStreamResponse
 					err := json.Unmarshal([]byte(data), &streamResponse)
 					if err != nil {
-						common.SysError("error unmarshalling stream response: " + err.Error())
+						logger.SysError("error unmarshalling stream response: " + err.Error())
 						continue
 					}
 					for _, choice := range streamResponse.Choices {
